@@ -60,6 +60,7 @@ Całość jest dostępna zdalnie przez prywatną sieć **Tailscale** pod adresem
 docker --version
 docker compose version
 tailscale status
+```
 
 ##5. Struktura plików
 

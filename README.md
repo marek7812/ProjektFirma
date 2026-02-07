@@ -62,15 +62,15 @@ docker compose version
 tailscale status
 ```
 
-##5. Struktura plików
+## 5. Struktura plików
 
+```bash
 projekt-firma/
 ├── docker-compose.yml
 ├── .env
 ├── nextcloud-onlyoffice.sh
 └── README.md
 ```
-
 
 ## 6. Pliki konfiguracyjne
 

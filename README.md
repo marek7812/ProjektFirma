@@ -1,4 +1,4 @@
-# System zarządzania małą firmą
+# System zarządzania małą firmą (hostowane na serwerze domowym za pomocą VPN Tailscale)
 
 ## Projekt zaliczeniowy – Konteneryzacja i orkiestracja usług IT
 
@@ -74,128 +74,9 @@ projekt-firma/
 
 ## 6. Pliki konfiguracyjne
 
-### 6.1. Plik .env
+- Plik .env
+- Plik docker-compose.yml
 
-```bash
-# === Baza danych MariaDB ===
-MYSQL_ROOT_PASSWORD=SuperTajneHasloRoot123!
-MYSQL_DATABASE=nextcloud
-MYSQL_USER=nextcloud
-MYSQL_PASSWORD=NextcloudHaslo456!
-
-# === Nextcloud ===
-NEXTCLOUD_ADMIN_USER=admin
-NEXTCLOUD_ADMIN_PASSWORD=AdminFirma789!
-
-# === OnlyOffice ===
-JWT_SECRET=MojSekretnyKluczJWT2024!
-
-# === Tailscale ===
-TAILSCALE_DOMAIN=ubuntu.goblin-penny.ts.net
-```
-### 6.2. Plik docker-compose.yml
-```YAML
-services:
-  mariadb:
-    image: mariadb:11.4
-    container_name: firma-mariadb
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - mariadb_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    networks:
-      - firma_network
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    command: >
-      --transaction-isolation=READ-COMMITTED
-      --log-bin=binlog
-      --binlog-format=ROW
-      --innodb-file-per-table=1
-      --skip-innodb-read-only-compressed
-  nextcloud:
-    image: nextcloud:29
-    container_name: firma-nextcloud
-    restart: unless-stopped
-    depends_on:
-      mariadb:
-        condition: service_healthy
-    environment:
-      MYSQL_HOST: host.docker.internal
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
-      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
-      NEXTCLOUD_TRUSTED_DOMAINS: localhost
-      PHP_MEMORY_LIMIT: 1024M
-      PHP_UPLOAD_LIMIT: 10G
-    volumes:
-      - nextcloud_data:/var/www/html
-    ports:
-      - "8080:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - firma_network
-
-  onlyoffice:
-    image: onlyoffice/documentserver:8.2
-    container_name: firma-onlyoffice
-    restart: unless-stopped
-    environment:
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_ENABLED: "true"
-    volumes:
-      - onlyoffice_data:/var/www/onlyoffice/Data
-      - onlyoffice_logs:/var/log/onlyoffice
-    ports:
-      - "8443:80"
-    networks:
-      - firma_network
-
-  adminer:
-    image: adminer:4
-    container_name: firma-adminer
-    restart: unless-stopped
-    depends_on:
-      mariadb:
-        condition: service_healthy
-    environment:
-      ADMINER_DEFAULT_SERVER: host.docker.internal
-      ADMINER_DESIGN: dracula
-    ports:
-      - "8081:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - firma_network
-
-volumes:
-  mariadb_data:
-    name: firma_mariadb_data
-  nextcloud_data:
-    name: firma_nextcloud_data
-  onlyoffice_data:
-    name: firma_onlyoffice_data
-  onlyoffice_logs:
-    name: firma_onlyoffice_logs
-
-networks:
-  firma_network:
-    name: firma_network
-    driver: bridge
-```
 # 7. Instrukcja uruchomienia
 ### 7.1. Przygotowanie plików
 ```Bash
@@ -261,16 +142,16 @@ onlyoffice enabled
   Adminer:    http://ubuntu.goblin-penny.ts.net:8081
 
   Login:  admin
-  Hasło:  AdminFirma789!
+  Hasło:  zaq1@WSX
 ```
 
 ### 7.4. Adresy dostępowe (z dowolnego urządzenia w sieci Tailscale)
 
 | Usługa | Adres | Dane logowania |
 |--------|-------|----------------|
-| **Nextcloud** | `http://ubuntu.goblin-penny.ts.net:8080` | **Login:** `admin`<br>**Hasło:** `AdminFirma789!` |
+| **Nextcloud** | `http://ubuntu.goblin-penny.ts.net:8080` | **Login:** `admin`<br>**Hasło:** `zaq1@WSX` |
 | **OnlyOffice** | `http://ubuntu.goblin-penny.ts.net:8443` | **Typ:** Serwer API<br>**Uwaga:** Brak bezpośredniego logowania - integracja przez Nextcloud |
-| **Adminer** | `http://ubuntu.goblin-penny.ts.net:8081` | **System:** `MySQL`<br>**Serwer:** `host.docker.internal`<br>**Użytkownik:** `nextcloud`<br>**Hasło:** `NextcloudHaslo456!`<br>**Baza danych:** `nextcloud` |
+| **Adminer** | `http://ubuntu.goblin-penny.ts.net:8081` | **System:** `MySQL`<br>**Serwer:** `host.docker.internal`<br>**Użytkownik:** `nextcloud`<br>**Hasło:** `zaq1@WSX`<br>**Baza danych:** `nextcloud` |
 
 # 8. Napotkane problemy i rozwiązania
 

@@ -1,0 +1,102 @@
+services:
+
+  mariadb:
+    image: mariadb:11.4
+    container_name: firma-mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - firma_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    command: >
+      --transaction-isolation=READ-COMMITTED
+      --log-bin=binlog
+      --binlog-format=ROW
+      --innodb-file-per-table=1
+      --skip-innodb-read-only-compressed
+
+  nextcloud:
+    image: nextcloud:29
+    container_name: firma-nextcloud
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST: host.docker.internal
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: localhost
+      PHP_MEMORY_LIMIT: 1024M
+      PHP_UPLOAD_LIMIT: 10G
+    volumes:
+      - nextcloud_data:/var/www/html
+    ports:
+      - "8080:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - firma_network
+
+  onlyoffice:
+    image: onlyoffice/documentserver:8.2
+    container_name: firma-onlyoffice
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ENABLED: "true"
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_logs:/var/log/onlyoffice
+    ports:
+      - "8443:80"
+    networks:
+      - firma_network
+
+  adminer:
+    image: adminer:4
+    container_name: firma-adminer
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      ADMINER_DEFAULT_SERVER: host.docker.internal
+      ADMINER_DESIGN: dracula
+    ports:
+      - "8081:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - firma_network
+
+volumes:
+  mariadb_data:
+    name: firma_mariadb_data
+  nextcloud_data:
+    name: firma_nextcloud_data
+  onlyoffice_data:
+    name: firma_onlyoffice_data
+  onlyoffice_logs:
+    name: firma_onlyoffice_logs
+
+networks:
+  firma_network:
+    name: firma_network
+    driver: bridge
